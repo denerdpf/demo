@@ -5,35 +5,53 @@ import com.example.demo.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class StudentService{
+public class StudentService {
 
     @Autowired
     private StudentRepository repository;
 
-    private String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
+    private final String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
 
-    public static boolean emailValidation(String email, String regexPattern) {
+    public boolean emailValidation(String email) {
         return Pattern.compile(regexPattern)
                 .matcher(email)
                 .matches();
     }
 
-    public void insertStudent(Student student){
-       repository.findStudentByEmail(student.getEmail()).ifPresentOrElse( s -> {
-       }, ()->{
-           if(emailValidation(student.getEmail(),regexPattern)) {
-               log.info("Student "+student+" inserted successfully");
-               repository.insert(student);
-           }else{
-               log.error("Something went wrong and was not possible to insert the student: " + student);
-           }
-       });
+    public void insertStudent(Student student) {
+
+        try {
+            repository.save(student);
+        } catch (Exception e) {
+              throw e;
+        }
+    }
+
+    public List<Student> studentList() {
+        return repository.findAll();
+    }
+
+    public boolean emailExist(String email) {
+        boolean exist;
+
+        Optional<Student> studentByEmail = repository.findStudentByEmail(email);
+        if (studentByEmail.isEmpty()) {
+            log.info("Ok");
+            exist = false;
+        } else {
+            log.info("User already taken this email: " + email);
+            exist = true;
+        }
+        return exist;
     }
 }
