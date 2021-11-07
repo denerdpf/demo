@@ -54,4 +54,9 @@ public class StudentService {
         }
         return exist;
     }
+
+    public Optional<Student> studentListById(String id){
+        return repository.findById(id);
+
+    }
 }
